@@ -6,6 +6,8 @@ const userSchema = mongoose.Schema({
     email:String, 
     disabled:Boolean,
     password:String,
+    role:String,
+    cart:[[String, Number]]
 })
 
 module.exports = mongoose.model("Users", userSchema);
