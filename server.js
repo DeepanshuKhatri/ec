@@ -82,27 +82,27 @@ app.post("/myProduct", async (req, res) => {
   res.send(data);
 });
 
-// app.post("/addToCart", async (req, res) => {
-//   const cartExists = await Cart.findOne({email:req.body.buyer_email, product_id: req.body.product_id})
-//   console.log(cartExists)
-//   if(cartExists){
-//     await Cart.updateOne({email:req.body.buyer_email, product_id: req.body.product_id},{$inc:{quantity:1}})
-//     res.send("updated")
-//   }
-//   else{
-//     const data = await Products.findOne({ _id: req.body.product_id });
-//     Cart.create({
-//         email: req.body.buyer_email,
-//       product_id: req.body.product_id,
-//       buyer_name: req.body.buyer_name,
-//       quantity: 1,
-//       vendor_name: data.vendor_name,
-//       category: data.category,
-//     })
-//     res.send("Added")
-//   }
+app.post("/addToCart", async (req, res) => {
+  const cartExists = await Cart.findOne({email:req.body.buyer_email, product_id: req.body.product_id})
+  console.log(cartExists)
+  if(cartExists){
+    await Cart.updateOne({email:req.body.buyer_email, product_id: req.body.product_id},{$inc:{quantity:1}})
+    res.send("updated")
+  }
+  else{
+    const data = await Products.findOne({ _id: req.body.product_id });
+    Cart.create({
+        email: req.body.buyer_email,
+      product_id: req.body.product_id,
+      buyer_name: req.body.buyer_name,
+      quantity: 1,
+      vendor_name: data.vendor_name,
+      category: data.category,
+    })
+    res.send("Added")
+  }
 
-// });
+});
 
 app.post("/getCartItems", async (req, res) => {
   console.log(req.body)
