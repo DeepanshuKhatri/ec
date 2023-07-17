@@ -78,6 +78,15 @@ app.get("/getProduct", async (req, res) => {
   res.send(x);
 });
 
+app.post('/updateProduct', async(req, res)=>{
+  await Products.updateOne({_id:req.body.id}, {
+    price:req.body.price,
+    product_name:req.body.product_name,
+    category:req.body.category,
+    desc:req.body.desc
+  })
+  res.send("done");
+})
 app.post("/myProduct", async (req, res) => {
   const data = await Products.find({ vendor_name: req.body.vendor_name });
   console.log(data);
@@ -206,7 +215,30 @@ app.post('/getUserAddresses', async (req, res) => {
 });
 
 
+app.post('/removeProduct', async(req, res)=>{
+  console.log(req.body)
+    const ress = await Products.deleteOne({ _id: req.body.product_id})
+    res.send("deleted");
+  })
 
+
+app.get('/getAllOrders', async (req, res)=>{
+  const data = await Order.find()
+  res.send(data)
+})
+
+app.get('/getVendors', async(req, res)=>{
+  const data = await Users.find({role:"vendor"})
+  res.send(data)
+})
+
+app.post('/changeStatus', async(req, res)=>{
+  console.log(req.body)
+  const user = await Users.findOne({_id:req.body.id});
+  user.disabled = req.body.disabled
+  await user.save();
+  res.send(req.body.disabled)
+})
 
 
 app.listen(5000, () => {
