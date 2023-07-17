@@ -1,5 +1,14 @@
 const mongoose = require('mongoose');
 
+const addressSchema = mongoose.Schema({
+    name:String,
+    number:String,
+    address:String,
+    locality:String,
+    city:String,
+    state:String
+})
+
 
 const userSchema = mongoose.Schema({
     name:String,
@@ -7,7 +16,8 @@ const userSchema = mongoose.Schema({
     disabled:Boolean,
     password:String,
     role:String,
-    cart:[[String, Number]]
+    address:[addressSchema]
+    // cart:[[String, Number]]
 })
 
 module.exports = mongoose.model("Users", userSchema);

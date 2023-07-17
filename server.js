@@ -4,6 +4,8 @@ const mongoose = require("mongoose");
 const Users = require("./Schemas/Users");
 const Products = require("./Schemas/Products");
 const Cart = require("./Schemas/Cart");
+const Order = require('./Schemas/Order')
+const e = require("express");
 
 const app = express();
 
@@ -82,15 +84,32 @@ app.post("/myProduct", async (req, res) => {
   res.send(data);
 });
 
-app.post("/addToCart", async (req, res) => {
-  const cartExists = await Cart.findOne({email:req.body.buyer_email, product_id: req.body.product_id})
-  console.log(cartExists)
+
+
+app.post('/alreadyInCart', async( req, res)=>{
+  console.log(req.body)
+  const cartExists = await Cart.exists({email:req.body.buyer_email, product_id:req.body.product_id})
+  // console.log(cartExists)
   if(cartExists){
-    await Cart.updateOne({email:req.body.buyer_email, product_id: req.body.product_id},{$inc:{quantity:1}})
-    res.send("updated")
+    res.send(true)
   }
   else{
+    res.send(false)
+  }
+})
+
+app.post("/addToCart", async (req, res) => {
+
+
+
+  // const cartExists = await Cart.findOne({email:req.body.buyer_email, product_id:req.body.product_id})
+  // if(cartExists){
+  //   // await Cart.updateOne({email:req.body.buyer_email, product_id:req.body.product_id}, {$inc:{quantity:1}})
+  //   res.send("present")
+  // }
+  // else{
     const data = await Products.findOne({ _id: req.body.product_id });
+    console.log(data)
     Cart.create({
         email: req.body.buyer_email,
       product_id: req.body.product_id,
@@ -99,8 +118,18 @@ app.post("/addToCart", async (req, res) => {
       vendor_name: data.vendor_name,
       category: data.category,
     })
+
     res.send("Added")
-  }
+  // }
+  // const cartExists = await Cart.findOne({email:req.body.buyer_email, product_id: req.body.product_id})
+  // console.log(cartExists)
+  // if(cartExists){
+  //   await Cart.updateOne({email:req.body.buyer_email, product_id: req.body.product_id},{$inc:{quantity:1}})
+  //   res.send("updated")
+  // }
+  // else{
+  //   res.send("Added")
+  // }
 
 });
 
@@ -117,9 +146,68 @@ app.post("/getCartProduct", async (req, res) => {
 });
 
 app.post('/removeFromCart', async(req, res)=>{
-    await Cart.updateOne({email:req.body.buyer_email, product_id: req.body.product_id},{$inc:{quantity:-1}})
-
+  console.log(req.body)
+    const ress = await Cart.deleteOne({ _id: req.body.product_id})
+    res.send("deleted");
   })
+
+app.post('/placeOrder', async (req, res)=>{
+  Order.create(
+    req.body.cartItems
+  )
+  res.send("done")
+})
+
+app.post('/emptyCart', async (req, res)=>{
+   await Cart.deleteMany({email: req.body.email})
+  res.send("Deleted");
+})
+
+
+
+
+
+app.post('/addAddress', async (req, res) => {
+  try {
+    const user = await Users.findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+
+    const addressDetails = req.body.addressDetails;
+    user.address.push(addressDetails); // Add the new address to the user's address array
+
+    await user.save(); // Save the updated user document
+
+    res.send('Address added successfully');
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+app.post('/getUserAddresses', async (req, res) => {
+  try {
+    const email = req.body.email;
+
+    const user = await Users.findOne({ email: email });
+
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+
+    const addresses = user.address;
+
+    res.send(addresses);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+
+
+
 
 app.listen(5000, () => {
   console.log("server started");
