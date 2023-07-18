@@ -1,9 +1,14 @@
 const mongoose = require("mongoose");
 
 const orderSchema = mongoose.Schema({
-  email: String,
+  buyer_email: String,
+  vendor_email:String,
   buyer_name: String,
   vendor_name: String,
+  price:Number,
+  address:String,
+  image:String,
+  brand:String,
   quantity: Number,
   product_id: String,
   category: [String], 

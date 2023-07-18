@@ -5,7 +5,10 @@ const Users = require("./Schemas/Users");
 const Products = require("./Schemas/Products");
 const Cart = require("./Schemas/Cart");
 const Order = require('./Schemas/Order')
-const e = require("express");
+const multer = require('multer')
+
+const path=require("path")
+
 
 const app = express();
 
@@ -13,6 +16,32 @@ app.use(cors());
 app.use(express.json());
 
 mongoose.connect("mongodb://127.0.0.1:27017/ecommerce");
+
+
+///MUlter 
+const storage = multer.diskStorage({
+  destination:'./uploads/',
+    // Specify the destination folder where uploaded files will be saved
+  filename:  (req, file, cb)=> {
+      cb(null, Date.now() + '-' + file.originalname); // Set the filename to be unique (using the current timestamp) and preserve the original filename
+  }   
+});
+const upload = multer({ storage });
+
+app.use(express.static(path.join(__dirname,"/uploads")))
+
+app.post('/uploads',upload.single('image'),(req,res)=>{
+  console.log(req.file)
+  const pic=req.file.filename;
+  res.send(pic);
+})
+// multer
+
+
+
+
+
+
 
 app.post("/signup", async (req, res) => {
   const accountExists = await Users.exists({ email: req.body.email });
@@ -63,6 +92,9 @@ app.post("/addProduct", async (req, res) => {
     desc: req.body.desc,
     price: req.body.price,
     category: req.body.category,
+    image:req.body.image,
+    brand:req.body.brand,
+    discount:req.body.discount,
   });
 
   res.send("done");
@@ -97,7 +129,7 @@ app.post("/myProduct", async (req, res) => {
 
 app.post('/alreadyInCart', async( req, res)=>{
   console.log(req.body)
-  const cartExists = await Cart.exists({email:req.body.buyer_email, product_id:req.body.product_id})
+  const cartExists = await Cart.exists({buyer_email:req.body.buyer_email, product_id:req.body.product_id})
   // console.log(cartExists)
   if(cartExists){
     res.send(true)
@@ -120,12 +152,18 @@ app.post("/addToCart", async (req, res) => {
     const data = await Products.findOne({ _id: req.body.product_id });
     console.log(data)
     Cart.create({
-        email: req.body.buyer_email,
+        buyer_email: req.body.buyer_email,
+        vendor_email:req.body.vendor_email,
       product_id: req.body.product_id,
       buyer_name: req.body.buyer_name,
       quantity: 1,
       vendor_name: data.vendor_name,
       category: data.category,
+      brand:req.body.brand,
+      name:req.body.product_name,
+      price:req.body.price,
+      discount:req.body.discount,
+      image:req.body.image
     })
 
     res.send("Added")
@@ -144,7 +182,7 @@ app.post("/addToCart", async (req, res) => {
 
 app.post("/getCartItems", async (req, res) => {
   console.log(req.body)
-  const data = await Cart.find({ email: req.body.customer_email });
+  const data = await Cart.find({ buyer_email: req.body.customer_email });
   res.send(data);
 });
 
@@ -162,7 +200,7 @@ app.post('/removeFromCart', async(req, res)=>{
 
 app.post('/placeOrder', async (req, res)=>{
   Order.create(
-    req.body.cartItems
+    ...req.body.cartItems
   )
   res.send("done")
 })
@@ -240,6 +278,16 @@ app.post('/changeStatus', async(req, res)=>{
   res.send(req.body.disabled)
 })
 
+app.post('/getMyOrders', async(req, res)=>{
+  const data = await Order.find({buyer_email:req.body.email})
+  res.send(data);
+})
+
+
+app.post('/getMyProductOrders', async (req, res)=>{
+  const data = await Order.find({vendor_email:req.body.email})
+  res.send(data)
+})
 
 app.listen(5000, () => {
   console.log("server started");
