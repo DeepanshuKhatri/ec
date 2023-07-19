@@ -7,6 +7,7 @@ const orderSchema = mongoose.Schema({
   vendor_name: String,
   price:Number,
   address:String,
+  discount:Number,
   image:String,
   brand:String,
   quantity: Number,

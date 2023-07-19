@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const productSchema = mongoose.Schema({
 
     vendor_name:String,
-    email:String,
+    vendor_email:String,
     product_name:String,
     approved: String,
     image:[String],

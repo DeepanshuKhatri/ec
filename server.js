@@ -85,7 +85,7 @@ app.post("/login", async (req, res) => {
 app.post("/addProduct", async (req, res) => {
   Products.create({
     vendor_name: req.body.vendor_name,
-    // email:req.body.email,
+    vendor_email:req.body.vendor_email,
     approved: false,
     // images:req.body.images,
     product_name: req.body.product_name,
@@ -120,7 +120,7 @@ app.post('/updateProduct', async(req, res)=>{
   res.send("done");
 })
 app.post("/myProduct", async (req, res) => {
-  const data = await Products.find({ vendor_name: req.body.vendor_name });
+  const data = await Products.find({ vendor_email: req.body.vendor_email });
   console.log(data);
   res.send(data);
 });
@@ -199,14 +199,29 @@ app.post('/removeFromCart', async(req, res)=>{
   })
 
 app.post('/placeOrder', async (req, res)=>{
+  const data = req.body.cartItems;
+  // console.log(data[0])
   Order.create(
     ...req.body.cartItems
+
   )
   res.send("done")
+
+  // Order.create(data, (err, createdOrders) => {
+  //   if (err) {
+  //     console.error(err);
+  //     return res.status(500).send("Error creating orders");
+  //   }
+
+  //   // `createdOrders` will contain the newly created orders with MongoDB-generated _id
+  //   console.log("Orders created:", createdOrders);
+  //   res.send("done");
+  // });
 })
 
-app.post('/emptyCart', async (req, res)=>{
-   await Cart.deleteMany({email: req.body.email})
+app.post('/emptyCartItems', async (req, res)=>{
+  console.log("dsafsdf", req.body)
+   await Cart.deleteMany({buyer_email: req.body.buyer_email})
   res.send("Deleted");
 })
 
