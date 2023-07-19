@@ -12,6 +12,7 @@ const orderSchema = mongoose.Schema({
   brand:String,
   quantity: Number,
   product_id: String,
+  status:Number,
   category: [String], 
 });
 

@@ -36,10 +36,31 @@ app.post('/uploads',upload.single('image'),(req,res)=>{
   res.send(pic);
 })
 // multer
+ 
 
 
-
-
+app.post("/updateImage",upload.single("image"),async(req,res)=>{
+  const id = req.body.id;
+  const pic = req.body.pic;
+  const image = req.file.filename;
+  try {
+      const user = await User.findById(id);
+      
+      if(!user){
+          return res.status(204).json("No such email exists");
+      }
+      if(pic=="profile"){
+          const newUser = await User.findByIdAndUpdate(id,{image : image });
+      }else{
+          const newUser = await User.findByIdAndUpdate(id,{"business.logo" : image });
+      }
+      
+      const updatedUser = await User.findById(id);        
+      return res.status(201).json(updatedUser);
+  } catch (error) {
+      return res.status(400).send("error while updating User!");
+  }
+})
 
 
 
@@ -67,16 +88,25 @@ app.post("/login", async (req, res) => {
   const accountExists = await Users.exists({
     email: req.body.email,
     password: req.body.password,
-    disabled: false,
+    // disabled: false,
   });
-  if (accountExists) {
-    res.status(200);
+  if (accountExists ) {
+
     const userDetails = await Users.findOne({
       email: req.body.email,
       password: req.body.password,
     });
-    res.send(userDetails);
+    if(userDetails.disabled===false){
+      res.status(200);
+      res.send(userDetails);
+      }
+      else{
+        res.status(202)
+        res.send(false)
+      }
+    
   } else {
+    
     res.status(201);
     res.send(false);
   }
@@ -202,7 +232,8 @@ app.post('/placeOrder', async (req, res)=>{
   const data = req.body.cartItems;
   // console.log(data[0])
   Order.create(
-    ...req.body.cartItems
+      ...req.body.cartItems,
+    
 
   )
   res.send("done")
@@ -293,6 +324,15 @@ app.post('/changeStatus', async(req, res)=>{
   res.send(req.body.disabled)
 })
 
+app.post('/changeOrderStatus', async (req, res)=>{
+  const order = await Order.findOne({_id:req.body.id});
+  order.status = req.body.value;
+  order.save();
+  res.send("done")
+
+})
+
+
 app.post('/getMyOrders', async(req, res)=>{
   const data = await Order.find({buyer_email:req.body.email})
   res.send(data);
@@ -300,7 +340,8 @@ app.post('/getMyOrders', async(req, res)=>{
 
 
 app.post('/getMyProductOrders', async (req, res)=>{
-  const data = await Order.find({vendor_email:req.body.email})
+  const data = await Order.find({vendor_email:req.body.vendor_email})
+  console.log(data)
   res.send(data)
 })
 
