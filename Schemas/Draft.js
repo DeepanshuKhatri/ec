@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 
-const productSchema = mongoose.Schema({
+const draftSchema = mongoose.Schema({
 
     vendor_name:String,
     vendor_email:String,
@@ -12,10 +12,9 @@ const productSchema = mongoose.Schema({
     price:Number,
     discount:Number,
     stock:Number,
-    sold: Number,
     category:[String],
     brand:String,
 
 })
 
-module.exports = mongoose.model("Products", productSchema);
+module.exports = mongoose.model("Draft", draftSchema);

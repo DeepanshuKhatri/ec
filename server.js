@@ -6,6 +6,7 @@ const Products = require("./Schemas/Products");
 const Cart = require("./Schemas/Cart");
 const Order = require('./Schemas/Order')
 const multer = require('multer')
+const Draft = require('./Schemas/Draft')
 
 const path=require("path")
 
@@ -44,15 +45,15 @@ app.post("/updateImage",upload.single("image"),async(req,res)=>{
   const pic = req.body.pic;
   const image = req.file.filename;
   try {
-      const user = await User.findById(id);
+      const user = await Users.findById(id);
       
       if(!user){
           return res.status(204).json("No such email exists");
       }
       if(pic=="profile"){
-          const newUser = await User.findByIdAndUpdate(id,{image : image });
+          const newUser = await Users.findByIdAndUpdate(id,{image : image });
       }else{
-          const newUser = await User.findByIdAndUpdate(id,{"business.logo" : image });
+          const newUser = await Users.findByIdAndUpdate(id,{"business.logo" : image });
       }
       
       const updatedUser = await User.findById(id);        
@@ -65,11 +66,11 @@ app.post("/updateImage",upload.single("image"),async(req,res)=>{
 
 
 app.post("/signup", async (req, res) => {
-  const accountExists = await Users.exists({ email: req.body.email });
+  const accountExists = await Users.findOne({ email: req.body.email });
   console.log(accountExists);
   if (accountExists) {
     res.status(201);
-    res.send("Account Exists");
+    res.send(accountExists);
   } else {
     Users.create({
       name: req.body.name,
@@ -82,6 +83,31 @@ app.post("/signup", async (req, res) => {
     res.send("Account Created");
   }
 });
+
+
+app.post('/cancelOrder', async(req, res)=>{
+  const order =await  Order.findOne({_id:req.body.id})
+  order.cancelled = true;
+  order.save();
+  res.send("order cancelled")
+})
+
+app.post('/addSignupDetail', async(req, res)=>{
+  console.log(req.body)
+  const user =await  Users.findOne({email:req.body.email})
+  user.role=req.body.role;
+   user.save();
+  res.send("Role Selected Successfully")
+})
+
+app.post('/updateUser', async (req, res)=>{
+  const user = await Users.findOne({email:req.body.email})
+  user.image = req.body.image
+  user.password = req.body.password
+  user.number = req.body.number
+  user.save();
+  res.send("done");
+})
 
 app.post("/login", async (req, res) => {
   console.log(req.body);
@@ -106,7 +132,6 @@ app.post("/login", async (req, res) => {
       }
     
   } else {
-    
     res.status(201);
     res.send(false);
   }
@@ -122,6 +147,7 @@ app.post("/addProduct", async (req, res) => {
     desc: req.body.desc,
     price: req.body.price,
     category: req.body.category,
+    stock:req.body.stock,
     image:req.body.image,
     brand:req.body.brand,
     discount:req.body.discount,
@@ -129,6 +155,33 @@ app.post("/addProduct", async (req, res) => {
 
   res.send("done");
 });
+
+app.get('/bestSelling', async (req, res)=>{
+  const data =await  Products.find().sort({ sold: -1 }).limit(3)
+  // const sendData = JSON.parse(data);
+  res.send(data)
+})
+
+
+app.post("/addDraft", async (req, res) => {
+  Draft.create({
+    vendor_name: req.body.vendor_name,
+    vendor_email:req.body.vendor_email,
+    approved: false,
+    // images:req.body.images,
+    product_name: req.body.product_name,
+    desc: req.body.desc,
+    price: req.body.price,
+    category: req.body.category,
+    image:req.body.image,
+    brand:req.body.brand,
+    discount:req.body.discount,
+  });
+
+  res.send("done");
+});
+
+
 
 app.post("/productAdded", (req, res) => {
   console.log(req.body);
@@ -155,6 +208,11 @@ app.post("/myProduct", async (req, res) => {
   res.send(data);
 });
 
+app.post("/myDraft", async (req, res) => {
+  const data = await Draft.find({ vendor_email: req.body.vendor_email });
+  console.log(data);
+  res.send(data);
+});
 
 
 app.post('/alreadyInCart', async( req, res)=>{
@@ -228,13 +286,19 @@ app.post('/removeFromCart', async(req, res)=>{
     res.send("deleted");
   })
 
+  app.post('/updateStock', async(req, res)=>{
+    const product = await Products.findOne({_id:req.body.id});
+    product.stock -= req.body.quantity,
+    sold += req.body.quantity
+    product.save();
+    res.send("Updated Stock")
+  })
+
 app.post('/placeOrder', async (req, res)=>{
   const data = req.body.cartItems;
   // console.log(data[0])
   Order.create(
       ...req.body.cartItems,
-    
-
   )
   res.send("done")
 

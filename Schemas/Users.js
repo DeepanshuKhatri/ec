@@ -16,7 +16,9 @@ const userSchema = mongoose.Schema({
     disabled:Boolean,
     password:String,
     role:String,
-    address:[addressSchema]
+    address:[addressSchema],
+    image:String,
+    number:Number,
     // cart:[[String, Number]]
 })
 
